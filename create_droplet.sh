@@ -35,8 +35,8 @@ curl -X POST "${API_URL}/droplets" \
 \"user_data\":
 \"#!bin/bash
 mkdir -p ${MAGE_WEB_ROOT_PATH%/*}/.ssh
-echo "${SSH_RSA}" > ${MAGE_WEB_ROOT_PATH%/*}/.ssh/authorized_keys
-echo "${SSH_RSA}" >> /root/.ssh/authorized_keys 
+echo ${SSH_RSA} > ${MAGE_WEB_ROOT_PATH%/*}/.ssh/authorized_keys
+echo ${SSH_RSA} >> /root/.ssh/authorized_keys 
 wget -O /root/droplet_config.sh ${DROPLET_CONFIG_FILE}
 bash /root/droplet_config.sh
 rm /root/droplet_config.sh

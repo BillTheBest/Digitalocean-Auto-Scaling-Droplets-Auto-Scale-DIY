@@ -1,37 +1,40 @@
 #!/bin/bash
-#Push site updates from master server to front end web servers via rsync
-BALANCER="xxx.xxx.xxx.xxx"
+
+# Push updates from master server to frontend web servers via rsync
+MAGE_WEB_USER="myshop"
+MAGE_WEB_ROOT_PATH="/home/${MAGE_WEB_USER}/public_html"
+BALANCER="DO LB IP ADDRESS"
 now=$(date +"%d.%m.%Y %T")
-DROPLETS=$(ssh -q -oStrictHostKeyChecking=no -i /home/helix/.ssh/id_dsa helix@${BALANCER} cat /home/helix/backend/backend.txt)
+DROPLETS=$(ssh -q -oStrictHostKeyChecking=no -i ${MAGE_WEB_ROOT_PATH%/*}/.ssh/${MAGE_WEB_USER} ${MAGE_WEB_USER}@${BALANCER} cat ${MAGE_WEB_ROOT_PATH%/*}/backend.txt)
 webservers=(${DROPLETS})
-status="/home/helix/html/magento/datasync.status.html"
+status="${MAGE_WEB_ROOT_PATH}/datasync.status.html"
 
 if [ ! -z "${DROPLETS}" ]; then
 
 if [ -d /tmp/.rsync.lock ]; then
-echo "FAILURE : rsync lock exists : Perhaps there is a lot of new data to push to front end web servers." > $status
+echo "FAILURE : rsync lock exists : Perhaps there are lots of new data to push to frontend web servers." > ${status}
 exit 1
 fi
 
 touch /tmp/.rsync.lock
 
 if [ $? = "1" ]; then
-echo "FAILURE : can not create lock" > $status
+echo "FAILURE : can not create lock" > ${status}
 exit 1
 else
-echo "SUCCESS : created lock" > $status
+echo "SUCCESS : created lock" > ${status}
 fi
 
 for DROPLET in ${webservers[@]}; do
 
 echo "===== Beginning rsync of ${DROPLET} ====="
 
-nice -n 20 /usr/bin/rsync -azx --timeout=30 --delete -e 'ssh -q -oStrictHostKeyChecking=no -i /home/helix/.ssh/id_rsa' --exclude-from=/home/helix/exclude.list  /home/helix/html/magento/ helix@${DROPLET}:/home/helix/html/magento/
+nice -n 20 /usr/bin/rsync -azx --timeout=30 --delete -e "ssh -q -oStrictHostKeyChecking=no -i ${MAGE_WEB_ROOT_PATH%/*}/.ssh/id_rsa" --exclude-from=${MAGE_WEB_ROOT_PATH%/*}/exclude.list  ${MAGE_WEB_ROOT_PATH}/ ${MAGE_WEB_USER}@${DROPLET}:${MAGE_WEB_ROOT_PATH}/
 
 if [ $? = "1" ]; then
-echo "Time of sync: ${now}" > $status
-echo "<br/>" >> $status
-echo "FAILURE : rsync failed." >> $status
+echo "Time of sync: ${now}" > ${status}
+echo "<br/>" >> ${status}
+echo "FAILURE : rsync failed." >> ${status}
 exit 1
 fi
 

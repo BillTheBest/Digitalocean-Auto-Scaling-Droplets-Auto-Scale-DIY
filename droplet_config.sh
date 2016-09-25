@@ -76,25 +76,6 @@ systemctl daemon-reload
 systemctl enable php-fpm >/dev/null 2>&1
 systemctl disable httpd >/dev/null 2>&1
 
-## install hhvm
-cat > /etc/yum.repos.d/gleez.repo <<END
-[gleez]
-name=Gleez repo
-baseurl=https://yum.gleez.com/7/x86_64/
-gpgcheck=0
-enabled=1
-includepkgs=hhvm
-END
-
-yum -y -q install hhvm >/dev/null 2>&1
-
-## plug in service status alert
-cp /usr/lib/systemd/system/hhvm.service /etc/systemd/system/hhvm.service
-sed -i "/^Description=.*/a OnFailure=service-status-mail@%n.service" /etc/systemd/system/hhvm.service
-sed -i "/\[Install\]/i Restart=on-failure\nRestartSec=10\n" /etc/systemd/system/hhvm.service
-systemctl daemon-reload
-systemctl enable hhvm >/dev/null 2>&1
-
 cat > /etc/sysctl.conf <<END
 fs.file-max = 1000000
 fs.inotify.max_user_watches = 1000000
@@ -215,11 +196,6 @@ sed -i "s,;syslog.facility = daemon,syslog.facility = local4/" /etc/php-fpm.conf
 echo "local4.* ${SYSLOG_SERVER}" >> /etc/rsyslog.conf
 service rsyslog restart >/dev/null 2>&1
 
-sed -i "s/nginx/${MAGE_WEB_USER}/" /etc/systemd/system/hhvm.service
-sed -i "s/daemon/server/" /etc/systemd/system/hhvm.service
-sed -i "/.*hhvm.server.port.*/a hhvm.server.ip = 127.0.0.1" /etc/hhvm/server.ini
-sed -i '/.*hhvm.jit_a_size.*/,$d' /etc/hhvm/server.ini
-
 ## service status email alerting
 wget -qO /etc/systemd/system/service-status-mail@.service ${REPO_MASCM_TMP}service-status-mail@.service
 wget -qO /bin/service-status-mail.sh ${REPO_MASCM_TMP}service-status-mail.sh
@@ -228,7 +204,6 @@ sed -i "s/DOMAINNAME/${MAGE_DOMAIN}/" /bin/service-status-mail.sh
 chmod u+x /bin/service-status-mail.sh
 systemctl daemon-reload
 
-/bin/systemctl restart hhvm.service
 /bin/systemctl restart php-fpm.service
 
 ## create swap

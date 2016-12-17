@@ -21,6 +21,7 @@ MAGE_DOMAIN="myshop.com"
 MAGE_WEB_USER="myshop"
 MAGE_WEB_ROOT_PATH="/home/${MAGE_WEB_USER}/public_html"
 MAGE_ADMIN_EMAIL="alert@myshop.com"
+MAGE_ADMIN_SERVER="1.2.3.4"
 MAGE_TIMEZONE="UTC"
 SESSION_SAVE_PATH="tcp://1.2.3.4:6379"
 SYSLOG_SERVER="@1.2.3.4:514"
@@ -221,5 +222,6 @@ chmod u+x /root/delete_droplet.sh
 
 ## fix permissions
 chown -R ${MAGE_WEB_USER}:${MAGE_WEB_USER} ${MAGE_WEB_ROOT_PATH%/*}
+cd ${MAGE_WEB_ROOT_PATH}
 find . -type f -exec chmod 660 {} \;
 find . -type d -exec chmod 2770 {} \;
